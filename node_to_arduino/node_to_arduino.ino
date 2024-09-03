@@ -37,14 +37,14 @@ void loop() {
 
     // Sprawdzenie wartości "device"
     String instruction = doc["instruction"].as<String>();
-      if (instruction == "dziala") {
+      if (instruction == "check-connection") {
         // Zapal wszystkie diody LED na 1 sekundę
         digitalWrite(lightPin, HIGH);
         digitalWrite(lightPin2, HIGH);
         delay(1000);
         digitalWrite(lightPin, LOW);
         digitalWrite(lightPin2, LOW);
-        Serial.println("All LEDs turned ON for 1 second");
+        returnIsConnected();
       }
 
 
@@ -53,6 +53,15 @@ void loop() {
 
   }
   //serwo();
+}
+
+void returnIsConnected(){
+  StaticJsonDocument<200> doc;
+  doc["connected"] = true;
+  
+  String jsonOutput;
+  serializeJson(doc, jsonOutput);
+  Serial.println(jsonOutput);
 }
 
 void serwo() {
