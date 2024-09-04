@@ -4,8 +4,8 @@
 int lightPin = 5;
 int lightPin2 = 4;
 Servo serwomechanizm;  
-unsigned long previousMillis = 0;  // Zmienna do przechowywania poprzedniego czasu
-const long interval = 1000;  // Interwał czasu w milisekundach (1 sekunda)
+unsigned long previousMillis = 0;  
+const long interval = 1000;  
 
 void setup() {
   pinMode(lightPin, OUTPUT);
@@ -35,10 +35,8 @@ void loop() {
       return;
     }
 
-    // Sprawdzenie wartości "device"
     String instruction = doc["instruction"].as<String>();
       if (instruction == "check-connection") {
-        // Zapal wszystkie diody LED na 1 sekundę
         digitalWrite(lightPin, HIGH);
         digitalWrite(lightPin2, HIGH);
         delay(1000);
@@ -46,11 +44,10 @@ void loop() {
         digitalWrite(lightPin2, LOW);
         returnIsConnected();
       }
-
-
-
-
-
+      if(instruction == "send-devices-list"){
+        sendDeviceList();
+      }
+      
   }
   //serwo();
 }
@@ -62,6 +59,7 @@ void returnIsConnected(){
   String jsonOutput;
   serializeJson(doc, jsonOutput);
   Serial.println(jsonOutput);
+
 }
 
 void serwo() {
@@ -74,4 +72,36 @@ void serwo() {
   Serial.println(serwomechanizm.read());
   delay(1000);
   serwomechanizm.write(0);  
+}
+
+void sendDeviceList() {
+  StaticJsonDocument<200> doc;
+  
+  // Tworzenie tablicy JSON dla urządzeń
+  JsonArray devices = doc.createNestedArray("devices");
+
+  // Dodanie pierwszego urządzenia do tablicy
+  JsonObject device1 = devices.createNestedObject();
+  device1["id"] = 1;
+  device1["name"] = "LED1";
+  device1["status"] = "active";
+
+  // Dodanie drugiego urządzenia do tablicy
+  JsonObject device2 = devices.createNestedObject();
+  device2["id"] = 2;
+  device2["name"] = "LED2";
+  device2["status"] = "not-active";
+  
+  // Dodanie trzeciego urządzenia do tablicy (np. serwomechanizm)
+  JsonObject device3 = devices.createNestedObject();
+  device3["id"] = 3;
+  device3["name"] = "Servo";
+  device3["status"] = "active";
+
+  // Serializacja dokumentu JSON do Stringa
+  String jsonOutput;
+  serializeJson(doc, jsonOutput);
+
+  // Wysłanie JSON przez Serial
+  Serial.println(jsonOutput);
 }
