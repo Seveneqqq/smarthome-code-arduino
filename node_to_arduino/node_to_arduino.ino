@@ -1,14 +1,19 @@
-#include <Servo.h>
 #include <ArduinoJson.h>
+#include "DHT.h"
 
+#define SERIAL_TX_BUFFER_SIZE 256
+#define SERIAL_RX_BUFFER_SIZE 256
 #define echoPin 2
 #define trigPin 3
+#define DHT11_PIN 7
+
+DHT dht;
 
 long duration;
 int distance;
 int lightPin = 5;
 int lightPin2 = 4;
-Servo serwomechanizm;
+
 
 unsigned long previousMillis = 0;
 const long interval = 1000;
@@ -19,24 +24,30 @@ void setup() {
     pinMode(echoPin, INPUT);
     pinMode(lightPin, OUTPUT);
     pinMode(lightPin2, OUTPUT);
-    serwomechanizm.attach(9);
+    dht.setup(DHT11_PIN);
     Serial.begin(9600);
 }
 
 void loop() {
+ 
+    delay(1000); //Odczekanie wymaganego czasu
+
     if(isStarted == true){
         delay(300);
         startApp();
     }
 
     if (Serial.available() > 0) {
+
+      delay(500); //bez tego delaya wariuje program 
+
         String receivedString = "";
         
         while (Serial.available() > 0) {
             receivedString += char(Serial.read());
         }
 
-        StaticJsonDocument<200> doc;
+        StaticJsonDocument<800> doc;
         DeserializationError error = deserializeJson(doc, receivedString);
 
         if (error) {
@@ -83,31 +94,31 @@ void loop() {
                     digitalWrite(lightPin2, LOW);
                 }
             }
-            else if(deviceName == "Servo") {
-                if(state == 1){
-                    serwomechanizm.write(brightness); // Using brightness as angle for servo
-                } else {
-                    serwomechanizm.write(0);
-                }
-            }
         }
     }
 }
 
-// Rest of the functions remain the same
 void startApp(){
+
     digitalWrite(trigPin, LOW);
     delayMicroseconds(300);
     digitalWrite(trigPin,HIGH);
     delayMicroseconds(300);
     digitalWrite(trigPin,LOW);
+
     duration = pulseIn(echoPin, HIGH);
     distance = duration * 0.0344 / 2;
-    Serial.println("{ \"distance\": " + String(distance) + " }");
+
+    int humidity = dht.getHumidity();
+    int temperature = dht.getTemperature();
+
+    Serial.println("{ \"distance\": " + String(distance) + 
+                  ", \"humidity\": " + String(humidity) + 
+                  ", \"temperature\": " + String(temperature) + " }");
 }
 
 void returnIsConnected(){
-    StaticJsonDocument<200> doc;
+    StaticJsonDocument<800> doc;
     doc["connected"] = true;
     
     String jsonOutput;
@@ -115,20 +126,8 @@ void returnIsConnected(){
     Serial.println(jsonOutput);
 }
 
-void serwo() {
-    digitalWrite(lightPin, HIGH);
-    Serial.println(serwomechanizm.read());
-    serwomechanizm.write(0);
-    delay(1000);
-    Serial.println(serwomechanizm.read());
-    serwomechanizm.write(90);
-    Serial.println(serwomechanizm.read());
-    delay(1000);
-    serwomechanizm.write(0);
-}
-
 void sendDeviceList() {
-    StaticJsonDocument<200> doc;
+    StaticJsonDocument<800> doc; //rozmiar dokumentow, przy 200 wysyla 2 
     
     JsonArray devices = doc.createNestedArray("devices");
 
@@ -144,10 +143,19 @@ void sendDeviceList() {
     
     JsonObject device3 = devices.createNestedObject();
     device3["id"] = 3;
-    device3["name"] = "Servo";
+    device3["name"] = "LED3";
     device3["status"] = "active";
+
+    JsonObject device4 = devices.createNestedObject();
+    device4["id"] = 4;
+    device4["name"] = "LED4";
+    device4["status"] = "not-active";
+   
 
     String jsonOutput;
     serializeJson(doc, jsonOutput);
     Serial.println(jsonOutput);
 }
+
+
+
