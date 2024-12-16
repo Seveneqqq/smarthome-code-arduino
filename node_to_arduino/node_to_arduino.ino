@@ -65,7 +65,10 @@ void loop() {
             digitalWrite(lightPin2, LOW);
             returnIsConnected();
         }
-        
+        if (instruction == "scenario") {
+          Serial.println("Wywolywanie");
+          handleScenario(doc);
+        }
         if(instruction == "send-devices-list"){
             sendDeviceList();
         }
@@ -93,6 +96,35 @@ void loop() {
                 } else {
                     digitalWrite(lightPin2, LOW);
                 }
+            }
+        }
+    }
+}
+
+void handleScenario(StaticJsonDocument<800>& doc) {
+
+  Serial.println("Wywolywanie 2");
+    bool scenarioState = doc["state"];
+    JsonArray devices = doc["devices"];
+
+    for (JsonObject device : devices) {
+        String deviceName = device["name"].as<String>();
+        JsonObject actions = device["actions"];
+        int state = actions["state"];
+        int brightness = actions["brightness"];
+
+        if (deviceName == "LED1") {
+            if (state == 1) {
+                digitalWrite(lightPin, HIGH);
+            } else {
+                digitalWrite(lightPin, LOW);
+            }
+        }
+        else if (deviceName == "LED2") {
+            if (state == 1) {
+                digitalWrite(lightPin2, HIGH);
+            } else {
+                digitalWrite(lightPin2, LOW);
             }
         }
     }
