@@ -168,6 +168,9 @@ void handleDeviceControl(const JsonDocument& doc) {
     else if(strcmp(deviceName, "LED2") == 0) {
         digitalWrite(lightPin2, state == 1 ? HIGH : LOW);
     }
+    else if(strcmp(deviceName, "HEAT_PUMP") == 0) {
+            digitalWrite(lightPin, state == 1 ? HIGH : LOW);
+        }
     else if(strcmp(deviceName, "FRONT_GATE") == 0) {
         if(state == 0){
           myservo.write(162);
@@ -212,6 +215,9 @@ void handleScenario(const JsonDocument& doc) {
         }
         else if(strcmp(deviceName, "LED2") == 0) {
             digitalWrite(lightPin2, state == 1 ? HIGH : LOW);
+        }
+        else if(strcmp(deviceName, "HEAT_PUMP") == 0) {
+            digitalWrite(lightPin, state == 1 ? HIGH : LOW);
         }
         else if(strcmp(deviceName, "FRONT_GATE") == 0) {
           if(state == 0){
@@ -307,6 +313,16 @@ void sendDeviceList() {
     device4["id"] = 4;
     device4["name"] = "GARAGE_GATE";
     device4["status"] = "active";
+
+    JsonObject device5 = devices.createNestedObject();
+    device5["id"] = 5;
+    device5["name"] = "HEAT_PUMP";
+    device5["status"] = "active";
+
+    JsonObject device6 = devices.createNestedObject();
+    device6["id"] = 6;
+    device6["name"] = "temperature and humidity sensor";
+    device6["status"] = "active";
     
     String jsonOutput;
     serializeJson(doc, jsonOutput);
