@@ -8,6 +8,9 @@
 #define trigPin 3
 #define DHT11_PIN 7
 
+#define POMPA_CIEPLA 13
+#define POMPA_CIEPLA_WYL A0
+
 #define SERVO_PIN 9
 #define SERVO_PIN2 10
 #define SERVO_PIN3 11
@@ -35,6 +38,11 @@ void setup() {
     pinMode(echoPin, INPUT);
     pinMode(lightPin, OUTPUT);
     pinMode(lightPin2, OUTPUT);
+    pinMode(POMPA_CIEPLA, OUTPUT);
+    pinMode(POMPA_CIEPLA_WYL, OUTPUT);
+     
+    digitalWrite(POMPA_CIEPLA_WYL, HIGH); 
+
     dht.setup(DHT11_PIN);
     Serial.begin(9600);
     myservo.attach(SERVO_PIN);
@@ -44,9 +52,6 @@ void setup() {
 }
 
 void loop() {
-
-    
-
 
     if(isStarted) {
         unsigned long currentMillis = millis();
@@ -156,6 +161,7 @@ void handleDeviceControl(const JsonDocument& doc) {
     const char* deviceName = doc["device"] | "";
     int state = doc["actions"]["state"] | 0;
     int brightness = doc["actions"]["brightness"] | 100;
+    
 
     if(strcmp(deviceName, "LED1") == 0) {
         int pwmValue = map(brightness, 0, 100, 0, 255);
@@ -169,8 +175,14 @@ void handleDeviceControl(const JsonDocument& doc) {
         digitalWrite(lightPin2, state == 1 ? HIGH : LOW);
     }
     else if(strcmp(deviceName, "HEAT_PUMP") == 0) {
-            digitalWrite(lightPin, state == 1 ? HIGH : LOW);
-        }
+    if(state == 1) {
+        digitalWrite(POMPA_CIEPLA, HIGH);
+        digitalWrite(POMPA_CIEPLA_WYL, LOW);    
+    } else {
+        digitalWrite(POMPA_CIEPLA, LOW);
+        digitalWrite(POMPA_CIEPLA_WYL, HIGH);   
+    }
+}
     else if(strcmp(deviceName, "FRONT_GATE") == 0) {
         if(state == 0){
           myservo.write(162);
@@ -204,6 +216,7 @@ void handleScenario(const JsonDocument& doc) {
         const char* deviceName = device["name"] | "";
         int state = device["actions"]["state"] | 0;
         int brightness = device["actions"]["brightness"] | 100;
+        int targetTemp = device["actions"]["temperature"] | 24;
 
         if(strcmp(deviceName, "LED1") == 0) {
             int pwmValue = map(brightness, 0, 100, 0, 255);
@@ -217,7 +230,19 @@ void handleScenario(const JsonDocument& doc) {
             digitalWrite(lightPin2, state == 1 ? HIGH : LOW);
         }
         else if(strcmp(deviceName, "HEAT_PUMP") == 0) {
-            digitalWrite(lightPin, state == 1 ? HIGH : LOW);
+            if(state == 1) {  
+                  float currentTemp = dht.getTemperature();  
+                  if(currentTemp < targetTemp && state == 1) {
+                      digitalWrite(POMPA_CIEPLA, HIGH);
+                      digitalWrite(POMPA_CIEPLA_WYL, LOW);    
+                  } else {
+                      digitalWrite(POMPA_CIEPLA, LOW);
+                      digitalWrite(POMPA_CIEPLA_WYL, HIGH);   
+                  }
+            } else {
+                  digitalWrite(POMPA_CIEPLA_WYL, state == 1 ? LOW : HIGH);
+                  digitalWrite(POMPA_CIEPLA, LOW);
+            }
         }
         else if(strcmp(deviceName, "FRONT_GATE") == 0) {
           if(state == 0){
