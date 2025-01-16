@@ -4,19 +4,26 @@
 
 #define SERIAL_TX_BUFFER_SIZE 256
 #define SERIAL_RX_BUFFER_SIZE 256
-#define echoPin 2
-#define trigPin 3
+
+#define LIGHT_GARDEN 0 
+#define LIGHT_HALL 1
+#define LIGHT_OFFICE 2
+#define LIGHT_BEDROOM 3
+#define LIGHT_KITCHEN 4
+#define LIGHT_LIVING_ROOM 5
+#define LIGHT_GARAGE 6
 #define DHT11_PIN 7
+#define FRONT_GATE_1 9 
+#define FRONT_GATE_2 10
+#define GARAGE_GATE 11
+#define POMPA_CIEPLA 12
+#define POMPA_CIEPLA_WYL 13
 
-#define POMPA_CIEPLA 13
-#define POMPA_CIEPLA_WYL A0
 
-#define SERVO_PIN 9
-#define SERVO_PIN2 10
-#define SERVO_PIN3 11
-Servo myservo;
-Servo myservo2;
-Servo myservo3;
+
+Servo frontGate1;
+Servo frontGate2;
+Servo garageGate;
 DHT dht;
 
 long duration;
@@ -34,20 +41,25 @@ int bufferIndex = 0;
 bool jsonComplete = false;
 
 void setup() {
-    pinMode(trigPin, OUTPUT);
-    pinMode(echoPin, INPUT);
-    pinMode(lightPin, OUTPUT);
-    pinMode(lightPin2, OUTPUT);
+    
+    //---------------------------------------------------------------------------------------------
+    pinMode(LIGHT_GARDEN, OUTPUT);
+    pinMode(LIGHT_HALL, OUTPUT);
+    pinMode(LIGHT_OFFICE, OUTPUT);
+    pinMode(LIGHT_BEDROOM, OUTPUT);
+    pinMode(LIGHT_KITCHEN, OUTPUT);
+    pinMode(LIGHT_LIVING_ROOM, OUTPUT);
+    pinMode(LIGHT_GARAGE, OUTPUT);
     pinMode(POMPA_CIEPLA, OUTPUT);
     pinMode(POMPA_CIEPLA_WYL, OUTPUT);
-     
+    //---------------------------------------------------------------------------------------------
     digitalWrite(POMPA_CIEPLA_WYL, HIGH); 
 
     dht.setup(DHT11_PIN);
     Serial.begin(9600);
-    myservo.attach(SERVO_PIN);
-    myservo2.attach(SERVO_PIN2);
-    myservo3.attach(SERVO_PIN3);
+    frontGate1.attach(FRONT_GATE_1);
+    frontGate2.attach(FRONT_GATE_2);
+    garageGate.attach(GARAGE_GATE);
     while (!Serial) continue;
 }
 
@@ -61,35 +73,28 @@ void loop() {
         }
     }
 
-    // Odczytaj dostępne dane
     while (Serial.available() > 0) {
         char inChar = (char)Serial.read();
         
-        // Dodaj znak do bufora
         if (bufferIndex < sizeof(jsonBuffer) - 1) {
             jsonBuffer[bufferIndex] = inChar;
             bufferIndex++;
-            
-            // Sprawdź, czy to koniec JSONa
+
             if (inChar == '\n' || inChar == '\r') {
-                // Zakończ string
                 jsonBuffer[bufferIndex - 1] = '\0';
                 
-                // Znajdź początek i koniec JSON
                 char* start = strchr(jsonBuffer, '{');
                 char* end = strrchr(jsonBuffer, '}');
                 
                 if (start != NULL && end != NULL && end > start) {
-                    // Mamy kompletny JSON
                     processJsonCommand(start);
                 }
                 
-                // Resetuj bufor
+
                 bufferIndex = 0;
                 memset(jsonBuffer, 0, sizeof(jsonBuffer));
             }
         } else {
-            // Przepełnienie bufora - resetuj
             bufferIndex = 0;
             memset(jsonBuffer, 0, sizeof(jsonBuffer));
             sendErrorResponse("Buffer overflow", "");
@@ -98,7 +103,6 @@ void loop() {
 }
 
 void processJsonCommand(const char* jsonString) {
-    // Debug - pokaż otrzymany JSON
     StaticJsonDocument<200> debugDoc;
     debugDoc["type"] = "debug";
     debugDoc["received"] = jsonString;
@@ -106,7 +110,6 @@ void processJsonCommand(const char* jsonString) {
     serializeJson(debugDoc, debugOutput);
     Serial.println(debugOutput);
 
-    // Parsuj JSON
     StaticJsonDocument<800> doc;
     DeserializationError error = deserializeJson(doc, jsonString);
 
@@ -117,7 +120,6 @@ void processJsonCommand(const char* jsonString) {
         return;
     }
 
-    // Sprawdź czy mamy wymagane pola
     if (!doc.containsKey("instruction")) {
         sendErrorResponse("Brak pola 'instruction'", "");
         return;
@@ -163,17 +165,63 @@ void handleDeviceControl(const JsonDocument& doc) {
     int brightness = doc["actions"]["brightness"] | 100;
     
 
-    if(strcmp(deviceName, "LED1") == 0) {
-        int pwmValue = map(brightness, 0, 100, 0, 255);
-        if(state == 1) {
-            analogWrite(lightPin, pwmValue);
-        } else {
-            analogWrite(lightPin, 0);
+    if(strcmp(deviceName, "LIGHT_GARDEN") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
         }
-    }
-    else if(strcmp(deviceName, "LED2") == 0) {
-        digitalWrite(lightPin2, state == 1 ? HIGH : LOW);
-    }
+        else if(strcmp(deviceName, "LIGHT_GARAGE") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+        else if(strcmp(deviceName, "LIGHT_LIVING_ROOM") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+        else if(strcmp(deviceName, "LIGHT_KITCHEN") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+        else if(strcmp(deviceName, "LIGHT_BEDROOM") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+        else if(strcmp(deviceName, "LIGHT_OFFICE") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+        else if(strcmp(deviceName, "LIGHT_HALL") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+
     else if(strcmp(deviceName, "HEAT_PUMP") == 0) {
     if(state == 1) {
         digitalWrite(POMPA_CIEPLA, HIGH);
@@ -185,23 +233,23 @@ void handleDeviceControl(const JsonDocument& doc) {
 }
     else if(strcmp(deviceName, "FRONT_GATE") == 0) {
         if(state == 0){
-          myservo.write(162);
-          myservo2.write(43);
+          frontGate1.write(162);
+          frontGate2.write(43);
           delay(500);
         }
         else{
-        myservo.write(62);
-        myservo2.write(140);
+        frontGate1.write(62);
+        frontGate2.write(140);
         delay(500);
         }
     }
     else if(strcmp(deviceName, "GARAGE_GATE") == 0) {
         if(state == 0){
-          myservo3.write(10);
+          garageGate.write(10);
           delay(500);
         }
         else{
-        myservo3.write(160);
+        garageGate.write(160);
         delay(500);
         }
     }
@@ -218,7 +266,7 @@ void handleScenario(const JsonDocument& doc) {
         int brightness = device["actions"]["brightness"] | 100;
         int targetTemp = device["actions"]["temperature"] | 24;
 
-        if(strcmp(deviceName, "LED1") == 0) {
+        if(strcmp(deviceName, "LIGHT_GARDEN") == 0) {
             int pwmValue = map(brightness, 0, 100, 0, 255);
             if(state == 1) {
                 analogWrite(lightPin, pwmValue);
@@ -226,9 +274,55 @@ void handleScenario(const JsonDocument& doc) {
                 analogWrite(lightPin, 0);
             }
         }
-        else if(strcmp(deviceName, "LED2") == 0) {
-            digitalWrite(lightPin2, state == 1 ? HIGH : LOW);
+        else if(strcmp(deviceName, "LIGHT_GARAGE") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
         }
+        else if(strcmp(deviceName, "LIGHT_LIVING_ROOM") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+        else if(strcmp(deviceName, "LIGHT_KITCHEN") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+        else if(strcmp(deviceName, "LIGHT_BEDROOM") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+        else if(strcmp(deviceName, "LIGHT_OFFICE") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+        else if(strcmp(deviceName, "LIGHT_HALL") == 0) {
+            int pwmValue = map(brightness, 0, 100, 0, 255);
+            if(state == 1) {
+                analogWrite(lightPin, pwmValue);
+            } else {
+                analogWrite(lightPin, 0);
+            }
+        }
+        
         else if(strcmp(deviceName, "HEAT_PUMP") == 0) {
             if(state == 1) {  
                   float currentTemp = dht.getTemperature();  
@@ -246,23 +340,23 @@ void handleScenario(const JsonDocument& doc) {
         }
         else if(strcmp(deviceName, "FRONT_GATE") == 0) {
           if(state == 0){
-          myservo.write(162);
-          myservo2.write(43);
+          frontGate1.write(162);
+          frontGate2.write(43);
           delay(500);
           }
           else{
-          myservo.write(62);
-          myservo2.write(140);
+          frontGate1.write(62);
+          frontGate2.write(140);
           delay(500);
           }
         }
         else if(strcmp(deviceName, "GARAGE_GATE") == 0) {
         if(state == 0){
-          myservo3.write(10);
+          garageGate.write(10);
           delay(500);
         }
         else{
-        myservo3.write(160);
+        garageGate.write(160);
         delay(500);
         }
     }
@@ -271,18 +365,8 @@ void handleScenario(const JsonDocument& doc) {
 
 void sendSensorData() {
     StaticJsonDocument<200> doc;
-    
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
-
-    duration = pulseIn(echoPin, HIGH);
-    distance = duration * 0.0344 / 2;
-
+  
     doc["type"] = "sensor_data";
-    doc["distance"] = distance;
     doc["humidity"] = dht.getHumidity();
     doc["temperature"] = dht.getTemperature();
 
@@ -321,12 +405,12 @@ void sendDeviceList() {
 
     JsonObject device1 = devices.createNestedObject();
     device1["id"] = 1;
-    device1["name"] = "LED1";
+    device1["name"] = "LIGHT_GARDEN";
     device1["status"] = "active";
 
     JsonObject device2 = devices.createNestedObject();
     device2["id"] = 2;
-    device2["name"] = "LED2";
+    device2["name"] = "LIGHT_GARAGE";
     device2["status"] = "active";
 
     JsonObject device3 = devices.createNestedObject();
@@ -348,7 +432,32 @@ void sendDeviceList() {
     device6["id"] = 6;
     device6["name"] = "temperature and humidity sensor";
     device6["status"] = "active";
+
+    JsonObject device7 = devices.createNestedObject();
+    device7["id"] = 7;
+    device7["name"] = "LIGHT_LIVING_ROOM";
+    device7["status"] = "active";
     
+    JsonObject device8 = devices.createNestedObject();
+    device8["id"] = 8;
+    device8["name"] = "LIGHT_KITCHEN";
+    device8["status"] = "active";
+
+    JsonObject device9 = devices.createNestedObject();
+    device9["id"] = 9;
+    device9["name"] = "LIGHT_BEDROOM";
+    device9["status"] = "active";
+
+    JsonObject device10 = devices.createNestedObject();
+    device10["id"] = 10;
+    device10["name"] = "LIGHT_OFFICE";
+    device10["status"] = "active";
+
+    JsonObject device11 = devices.createNestedObject();
+    device11["id"] = 11;
+    device11["name"] = "LIGHT_HALL";
+    device11["status"] = "active";
+
     String jsonOutput;
     serializeJson(doc, jsonOutput);
     Serial.println(jsonOutput);
