@@ -10,5 +10,5 @@ Ustawienia portu można ustawić w panelu sterowania w zakładce menadżer urzą
     flowControl: false
 
 
-![Arduino Electrical diagram](https://github.com/Seveneqqq/smarthome-code-arduino/blob/master/Electrical%20diagram.png)
+![Arduino Electrical diagram](https://github.com/Seveneqqq/smarthome-code-arduino/blob/master/electrical_diagram.png)
 
