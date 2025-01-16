@@ -8,3 +8,7 @@ Ustawienia portu można ustawić w panelu sterowania w zakładce menadżer urzą
     parity: 'none',
     stopBits: 1,
     flowControl: false
+
+
+![Arduino Electrical diagram](https://github.com/Seveneqqq/smarthome-code-arduino/blob/master/Electrical%20diagram.png)
+
